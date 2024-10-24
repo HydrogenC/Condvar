@@ -1,7 +1,7 @@
 check:
 	gcc -o main main.c
 	./main
-	python check.py
+	python3 check.py
 
 clean:
 	rm out*.txt main

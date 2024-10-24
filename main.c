@@ -36,7 +36,8 @@ void *client(void *arg)
     out_name[4] = '0' + thread_id % 10;
     FILE *res = fopen(out_name, "w");
 
-    for (size_t i = 0; i < REQUESTS_PER_THREAD;)
+    size_t request_count = 0;
+    while (request_count < REQUESTS_PER_THREAD)
     {
         /**
          * @todo Acquire a slot in the shared buffer to issue requests.
@@ -48,9 +49,16 @@ void *client(void *arg)
          * server has processed the request. After receiving the response,
          * the client saves the result and reverts the slot's status back to `0`,
          * making it available for future requests.
+         *
+         * The client saves the result into out_name by the following format:
+         *
+         * [key_1] email_addr_1
+         * [key_2] email_addr_2
+         * [key_3] email_addr_3
+         * ...
          */
-        
-        exit(1);
+
+        exit(1); // Edit this.
     }
 
     pthread_exit(NULL);
@@ -87,13 +95,13 @@ void *server(void *arg)
          * request to notify the client.
          */
 
-        exit(1);
+        exit(1); // Edit this.
     }
 
     for (size_t i = 0; i < NUM_KEYS; i++)
         free(email_data[i]);
     free(email_data);
-    
+
     pthread_exit(NULL);
 }
 
@@ -124,6 +132,7 @@ int main()
         pthread_join(clients[i], NULL);
 
     pthread_mutex_destroy(&buffer_mutex);
-
+    for (size_t i = 0; i < BUFFER_SIZE; i++)
+        pthread_cond_destroy(&buffer[i].cond);
     return 0;
 }

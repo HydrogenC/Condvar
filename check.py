@@ -4,7 +4,7 @@ with open("db.txt") as f:
     emails = f.readlines()
 
 incorrect = 0
-num_records = 0
+num_records = 32 * 2000
 num_threads = 32
 for i in range(num_threads):
     with open(f"out{i // 10}{i % 10}.txt") as f:
