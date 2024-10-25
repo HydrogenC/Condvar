@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
    * 将 `done` 设为 1。
    * 调用 `imaginary_cond_signal(&c)` 尝试通知 `parent` 其已经退出。
 
-   **条件变量的 `signal` 只会唤醒当前已经在 `wait` 的线程，任何在此 `signal` 之后的 `wait` 都不会察觉到此 `signal` 的发生。这点与 semaphore 很不一样。**可以通过以下案例验证：
+   **条件变量的 `signal` 只会唤醒当前已经在 `wait` 的线程，任何在此 `signal` 之后的 `wait` 都不会察觉到此 `signal` 的发生。这点与 semaphore 很不一样**。可以通过以下案例验证：
 
    ```c
    int main() {
