@@ -21,6 +21,9 @@ typedef struct
 request_t buffer[BUFFER_SIZE];
 pthread_mutex_t buffer_mutex;
 
+int buffer_count = 0;
+pthread_cond_t buffer_cond;
+
 void *client(void *arg)
 {
     int thread_id = *(int *)arg;
@@ -58,7 +61,37 @@ void *client(void *arg)
          * ...
          */
 
-        exit(1); // Edit this.
+        int buffer_index = 0;
+        pthread_mutex_lock(&buffer_mutex);
+
+        while (buffer_count >= BUFFER_SIZE)
+        {
+            pthread_cond_wait(&buffer_cond, &buffer_mutex);
+        }
+
+        // Find a buffer slot
+        while (buffer[buffer_index].status != 0)
+        {
+            buffer_index++;
+        }
+
+        buffer[buffer_index].status = 1;
+        buffer[buffer_index].key = rand() % 500;
+        buffer_count++;
+
+        // Nofity server for new task
+        pthread_cond_broadcast(&buffer_cond);
+        request_count++;
+
+        while (buffer[buffer_index].status != 2)
+            pthread_cond_wait(&buffer[buffer_index].cond, &buffer_mutex);
+
+        buffer[buffer_index].status = 0;
+        fprintf(res, "%d %s", buffer[buffer_index].key, buffer[buffer_index].value);
+
+        buffer_count--;
+        pthread_cond_broadcast(&buffer_cond);
+        pthread_mutex_unlock(&buffer_mutex);
     }
 
     pthread_exit(NULL);
@@ -95,7 +128,28 @@ void *server(void *arg)
          * request to notify the client.
          */
 
-        exit(1); // Edit this.
+        pthread_mutex_lock(&buffer_mutex);
+        while (buffer_count == 0)
+        {
+            pthread_cond_wait(&buffer_cond, &buffer_mutex);
+        }
+
+        for (size_t i = 0; i < BUFFER_SIZE; i++)
+        {
+            if (buffer[i].status == 1)
+            {
+                const char *data = email_data[buffer[i].key];
+                strcpy(buffer[i].value, data);
+
+                request_count++;
+
+                buffer[i].status = 2;
+                pthread_cond_signal(&buffer[i].cond);
+                break;
+            }
+        }
+
+        pthread_mutex_unlock(&buffer_mutex);
     }
 
     for (size_t i = 0; i < NUM_KEYS; i++)
